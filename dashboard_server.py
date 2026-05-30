@@ -553,9 +553,19 @@ def fetch_loop():
     while True:
         try:
             if not os.path.exists(COOKIES_FILE):
-                print("Cookies file not found. Waiting 10 seconds before retry...")
-                time.sleep(10)
-                continue
+                email = os.environ.get("TRADETRON_EMAIL")
+                password = os.environ.get("TRADETRON_PASSWORD")
+                if not email or not password:
+                    print("[fetch_loop] Error: Cookies file not found, and TRADETRON_EMAIL/TRADETRON_PASSWORD are not set in environment variables! Please configure them in Railway variables. Retrying in 10 seconds...")
+                    time.sleep(10)
+                    continue
+                print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Cookies file '{COOKIES_FILE}' not found. Initializing session auto-recovery...")
+                import subprocess
+                subprocess.run(["python3", "get_tradetron_data.py"])
+                if not os.path.exists(COOKIES_FILE):
+                    print("Session auto-recovery failed to generate cookies. Retrying in 10 seconds...")
+                    time.sleep(10)
+                    continue
 
             with open(COOKIES_FILE, 'r') as f:
                 cookies = json.load(f)
