@@ -1,7 +1,6 @@
 .env
 tradetron_cookies.json
-dashboard.log
-dashboard_error.log
+*.log
 frontend/data.json
 venv/
 __pycache__/
