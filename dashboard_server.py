@@ -856,10 +856,11 @@ if __name__ == "__main__":
     indices_thread.start()
     
     # Start the local web server to host the dashboard UI
-    server_address = ('', 8080)
+    port = int(os.environ.get("PORT", 8080))
+    server_address = ('', port)
     httpd = HTTPServer(server_address, DashboardHandler)
     print("\n=======================================================")
-    print("🚀 Tradetron Dashboard Server Running at: http://localhost:8080")
+    print(f"🚀 Tradetron Dashboard Server Running at: http://localhost:{port}")
     print("=======================================================\n")
     try:
         httpd.serve_forever()
