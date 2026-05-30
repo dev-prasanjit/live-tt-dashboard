@@ -1,0 +1,16 @@
+.env
+tradetron_cookies.json
+dashboard.log
+dashboard_error.log
+frontend/data.json
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+login_failed.png
+endpoints_log.txt
+inspect_login.py
+test_altcha.py
+nse_holidays_cache.json
+market_open_baselines.json
+history/

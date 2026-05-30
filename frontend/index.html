@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tradetron Live Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5.0.0-beta.8/daisyui.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Apply theme early to prevent FOUC
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-base-300 text-base-content min-h-screen relative font-['Inter',sans-serif]">
+    <!-- Background Blob Effects -->
+    <div class="background-effects fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="blob blob-1 absolute w-[450px] h-[450px] rounded-full blur-[90px] opacity-40 top-[-100px] left-[-100px] bg-gradient-to-r from-primary to-secondary"></div>
+        <div class="blob blob-2 absolute w-[550px] h-[550px] rounded-full blur-[100px] opacity-25 bottom-[-200px] right-[-100px] bg-gradient-to-r from-success to-accent"></div>
+    </div>
+
+    <!-- Main Dashboard Container -->
+    <div class="container max-w-7xl mx-auto p-4 md:p-8 space-y-6 relative z-10">
+        
+        <!-- Top Live Indices & Market Status Bar -->
+        <div class="card bg-base-100/50 backdrop-blur-lg border border-base-content/10 shadow-lg p-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <!-- Market Index stats -->
+                <div class="flex flex-wrap items-center gap-6 md:gap-10">
+                    <div id="idxNifty" class="flex flex-col">
+                        <span class="text-[10px] font-semibold opacity-60 uppercase tracking-wider">Nifty 50</span>
+                        <div class="index-row flex items-baseline gap-2 text-base-content">
+                            <span class="index-val text-base md:text-lg font-bold">--</span>
+                            <span class="index-change text-xs md:text-sm font-medium">--</span>
+                        </div>
+                    </div>
+                    <div id="idxSensex" class="flex flex-col">
+                        <span class="text-[10px] font-semibold opacity-60 uppercase tracking-wider">Sensex</span>
+                        <div class="index-row flex items-baseline gap-2 text-base-content">
+                            <span class="index-val text-base md:text-lg font-bold">--</span>
+                            <span class="index-change text-xs md:text-sm font-medium">--</span>
+                        </div>
+                    </div>
+                    <div id="idxBankNifty" class="flex flex-col">
+                        <span class="text-[10px] font-semibold opacity-60 uppercase tracking-wider">Bank Nifty</span>
+                        <div class="index-row flex items-baseline gap-2 text-base-content">
+                            <span class="index-val text-base md:text-lg font-bold">--</span>
+                            <span class="index-change text-xs md:text-sm font-medium">--</span>
+                        </div>
+                    </div>
+                    <div id="idxIndiaVix" class="flex flex-col">
+                        <span class="text-[10px] font-semibold opacity-60 uppercase tracking-wider">India Vix</span>
+                        <div class="index-row flex items-baseline gap-2 text-base-content">
+                            <span class="index-val text-base md:text-lg font-bold">--</span>
+                            <span class="index-change text-xs md:text-sm font-medium">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clock / Status Badge -->
+                <div id="watchBadge" class="badge badge-lg badge-neutral gap-2 py-4 px-4 border border-base-content/10">
+                    <span class="status-indicator flex items-center gap-1.5 font-bold">
+                        <svg class="trend-icon w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                        <span class="status-text">Closed</span>
+                    </span>
+                    <span class="clock-text font-mono text-sm">00:00:00 IST</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Controls Row -->
+        <header class="navbar bg-base-100/50 backdrop-blur-lg border border-base-content/10 rounded-2xl p-4 md:p-6 shadow-md flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-base-content font-['Outfit']">Portfolio Analytics</h1>
+                <p class="text-sm opacity-60 mt-0.5">Live sync directly from Tradetron Session</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end">
+                <!-- Theme Toggle Switch -->
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] opacity-60 font-semibold uppercase tracking-wider">Theme:</span>
+                    <div class="flex items-center gap-1.5 bg-base-200/60 p-1.5 rounded-lg border border-base-content/10">
+                        <span class="text-[10px] font-bold opacity-75">LIGHT</span>
+                        <input type="checkbox" id="themeToggle" class="toggle toggle-primary toggle-xs" checked />
+                        <span class="text-[10px] font-bold opacity-75">DARK</span>
+                    </div>
+                </div>
+                
+                <button id="refreshBtn" class="btn btn-sm btn-outline border-base-content/20 hover:bg-base-content hover:text-base-100 hover:border-transparent gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+                    Refresh
+                </button>
+            </div>
+        </header>
+
+        <!-- Summary Metrics Dashboard Grid -->
+        <section class="stats stats-vertical lg:stats-horizontal shadow-xl bg-base-100/50 backdrop-blur-lg border border-base-content/10 w-full overflow-hidden">
+            <div class="stat p-6 border-b lg:border-b-0 lg:border-r border-base-content/10">
+                <div class="stat-title text-xs font-semibold opacity-60 uppercase tracking-wider mb-1">Total P&L</div>
+                <div id="totalPnl" class="stat-value text-2xl md:text-3xl font-extrabold positive">₹0.00</div>
+                <div id="totalPnlPct" class="stat-desc text-xs font-medium mt-1">0.00% Return on Capital</div>
+            </div>
+            
+            <div class="stat p-6 border-b lg:border-b-0 lg:border-r border-base-content/10">
+                <div class="stat-title text-xs font-semibold opacity-60 uppercase tracking-wider mb-1">Total Capital</div>
+                <div id="totalCapital" class="stat-value text-2xl md:text-3xl font-extrabold text-base-content">₹0.00</div>
+                <div class="stat-desc text-xs font-medium mt-1">Deployed</div>
+            </div>
+            
+            <div class="stat p-6 border-b lg:border-b-0 lg:border-r border-base-content/10">
+                <div class="stat-title text-xs font-semibold opacity-60 uppercase tracking-wider mb-1">Active Strategies</div>
+                <div id="activeStrats" class="stat-value text-2xl md:text-3xl font-extrabold text-base-content">0</div>
+                <div class="stat-desc text-xs font-medium mt-1">Out of total</div>
+            </div>
+            
+            <div class="stat p-6">
+                <div class="stat-title text-xs font-semibold opacity-60 uppercase tracking-wider mb-1">Today's Est. P&L</div>
+                <div id="todayPnl" class="stat-value text-2xl md:text-3xl font-extrabold positive">₹0.00</div>
+                <div class="stat-desc text-xs font-medium mt-1">Based on last run</div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="card bg-base-100/50 backdrop-blur-lg border border-base-content/10 shadow-xl overflow-hidden">
+            <div class="card-body p-6 flex flex-col gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-base-content/10 pb-4 mb-2">
+                    <div>
+                        <h3 class="card-title text-lg font-bold">Intraday MTM</h3>
+                        <span id="mtmChartSubtitle" class="text-xs opacity-60">Today's mark-to-market P&L curve</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="historyDaysSelect" class="select select-sm select-bordered w-36 max-w-xs font-semibold">
+                            <!-- Populated via JS -->
+                        </select>
+                        <button id="downloadChartBtn" class="btn btn-sm btn-outline border-base-content/20 hover:bg-base-content hover:text-base-100 hover:border-transparent gap-1.5">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper h-[350px] md:h-[400px] relative w-full">
+                    <canvas id="mtmChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Strategies Table Section -->
+        <section class="card bg-base-100/50 backdrop-blur-lg border border-base-content/10 shadow-xl overflow-hidden">
+            <div class="card-body p-6 gap-4">
+                <h3 class="card-title text-lg font-bold">Deployed Strategies</h3>
+                <div class="overflow-x-auto w-full">
+                    <table id="strategyTable" class="table table-zebra table-md w-full">
+                        <thead>
+                            <tr class="border-b border-base-content/10 text-xs opacity-75">
+                                <th class="font-semibold uppercase tracking-wider">Strategy Name</th>
+                                <th class="font-semibold uppercase tracking-wider">Status</th>
+                                <th class="font-semibold uppercase tracking-wider">Broker</th>
+                                <th class="font-semibold uppercase tracking-wider">Capital</th>
+                                <th class="font-semibold uppercase tracking-wider">Total P&L</th>
+                                <th class="font-semibold uppercase tracking-wider">Last P&L</th>
+                                <th class="font-semibold uppercase tracking-wider">Current P&L</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-medium">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="app.js?v=4"></script>
+</body>
+</html>

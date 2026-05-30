@@ -1,0 +1,70 @@
+/* Custom properties and animations */
+@keyframes float {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        transform: translate(80px, 40px) scale(1.15);
+    }
+}
+
+.blob {
+    animation: float 20s infinite alternate;
+}
+
+.blob-2 {
+    animation-delay: -5s;
+}
+
+/* Custom positive/negative text styling matching theme palette */
+.positive {
+    color: #10b981 !important; /* emerald green */
+}
+
+.negative {
+    color: #f43f5e !important; /* rose red */
+}
+
+/* Ensure chart canvas fits exactly within container wrapper */
+.chart-wrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Custom styles for broker cells in table */
+.broker-cell {
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem !important;
+    text-align: center;
+    color: #ffffff; /* keep text high contrast white inside colored broker tags */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Fade animation for indices when they update */
+@keyframes flash-green {
+    0% { background-color: rgba(16, 185, 129, 0.2); }
+    100% { background-color: transparent; }
+}
+
+@keyframes flash-red {
+    0% { background-color: rgba(244, 63, 94, 0.2); }
+    100% { background-color: transparent; }
+}
+
+.flash-up {
+    animation: flash-green 1s ease-out;
+}
+
+.flash-down {
+    animation: flash-red 1s ease-out;
+}
+
+/* Spinner rotation animation for Refresh button */
+.animate-spin-hover:hover {
+    transform: rotate(180deg);
+    transition: transform 0.4s ease;
+}

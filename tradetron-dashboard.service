@@ -1,0 +1,18 @@
+[Unit]
+Description=Tradetron Dashboard Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/tradetron_dashboard
+ExecStart=/usr/bin/python3 -u dashboard_server.py
+Restart=always
+RestartSec=10
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+StandardOutput=append:/home/ubuntu/tradetron_dashboard/dashboard.log
+StandardError=append:/home/ubuntu/tradetron_dashboard/dashboard_error.log
+
+[Install]
+WantedBy=multi-user.target
