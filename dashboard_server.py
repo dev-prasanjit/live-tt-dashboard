@@ -8,6 +8,11 @@ import urllib.request
 import urllib.parse
 import re
 from http.server import SimpleHTTPRequestHandler, HTTPServer
+
+# Force Playwright browser path inside the project directory when running in cloud environments
+if os.environ.get("PLAYWRIGHT_BROWSERS_PATH") is None and (os.path.exists("/app") or os.environ.get("RAILWAY_ENVIRONMENT")):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "/app/.cache/ms-playwright"
+
 from playwright.sync_api import sync_playwright
 
 # Load .env for Telegram credentials

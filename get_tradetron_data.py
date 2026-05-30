@@ -1,6 +1,11 @@
 import json
 import time
 import os
+
+# Force Playwright browser path inside the project directory when running in cloud environments
+if os.environ.get("PLAYWRIGHT_BROWSERS_PATH") is None and (os.path.exists("/app") or os.environ.get("RAILWAY_ENVIRONMENT")):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "/app/.cache/ms-playwright"
+
 from playwright.sync_api import sync_playwright
 
 def main():
