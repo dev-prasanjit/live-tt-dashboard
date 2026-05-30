@@ -576,7 +576,17 @@ def fetch_loop():
                 cookies = json.load(f)
 
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                try:
+                    browser = p.chromium.launch(headless=True)
+                except Exception as e:
+                    err_str = str(e)
+                    if "Executable doesn't exist" in err_str or "playwright install" in err_str or "headless_shell" in err_str:
+                        print("[Playwright] Browser executable not found. Running dynamic installation ('playwright install chromium')...")
+                        import subprocess
+                        subprocess.run(["python3", "-m", "playwright", "install", "chromium"])
+                        browser = p.chromium.launch(headless=True)
+                    else:
+                        raise
                 context = browser.new_context()
                 context.add_cookies(cookies)
                 page = context.new_page()
