@@ -532,7 +532,6 @@ def generate_telegram_report(strategies, broker_filter=None):
     if len(lines) == 1:
         return None
         
-    # lines.append(f"\n📈 *Total LIVE AUTO PNL: ₹{total_pnl:,.2f}*")
     return "\n".join(lines)
 
 def send_telegram_message(text):
