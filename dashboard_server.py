@@ -808,10 +808,34 @@ def telegram_listener_loop():
         except Exception as e:
             time.sleep(5)
 
+def git_autopush_loop():
+    import subprocess
+    print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] [Git Autopush] Thread started. Will check for changes every 5 minutes.")
+    while True:
+        try:
+            # Wait for 300 seconds
+            time.sleep(300)
+            
+            if os.path.exists("git_autopush.sh"):
+                res = subprocess.run(["/bin/bash", "git_autopush.sh"], capture_output=True, text=True)
+                if res.stdout:
+                    for line in res.stdout.strip().split("\n"):
+                        if any(phrase in line for phrase in ["Changes detected", "Push completed", "Error", "remote", "remote:", "remote: Error", "remote: Warning", "origin"]):
+                            print(f"[Git Autopush] {line}")
+                if res.stderr:
+                    print(f"[Git Autopush Error] {res.stderr.strip()}")
+        except Exception as e:
+            print(f"[Git Autopush Exception] {e}")
+
 if __name__ == "__main__":
     # Start the continuous playwright fetcher in a background thread
     fetch_thread = threading.Thread(target=fetch_loop, daemon=True)
     fetch_thread.start()
+    
+    # Start the Git auto-push daemon
+    git_thread = threading.Thread(target=git_autopush_loop, daemon=True)
+    git_thread.start()
+    
     
     # Start the Telegram command listener
     tg_thread = threading.Thread(target=telegram_listener_loop, daemon=True)
