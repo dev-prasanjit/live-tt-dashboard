@@ -589,6 +589,23 @@ function renderMtmChart() {
     });
 }
 
+function getBrokerShortcode(brokerName) {
+    if (!brokerName) return "N/A";
+    const mapping = {
+        'Flattrade': 'FT',
+        'Jainam Retail (XTS)': 'JR',
+        'AC Agarwal Retail XTS': 'ACA'
+    };
+    for (const [name, code] of Object.entries(mapping)) {
+        if (brokerName.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(brokerName.toLowerCase())) {
+            return code;
+        }
+    }
+    // Clean and fallback
+    const cleaned = brokerName.replace(/[^a-zA-Z]/g, '');
+    return cleaned ? cleaned.substring(0, 3).toUpperCase() : 'BRK';
+}
+
 async function recordMtmSnapshot() {
     const todayPnl = latestTodayPnl;
     
@@ -596,7 +613,12 @@ async function recordMtmSnapshot() {
     const strategiesPnl = {};
     currentStrategies.forEach(strat => {
         if (strat.template && strat.template.name) {
-            strategiesPnl[strat.template.name] = strat.today_pnl || 0;
+            const name = strat.template.name;
+            const runCounter = strat.run_counter || 0;
+            const brokerName = strat.strategy_broker?.broker?.name || '';
+            const shortcode = getBrokerShortcode(brokerName);
+            const uniqueName = `${name} (${runCounter} - ${shortcode})`;
+            strategiesPnl[uniqueName] = strat.today_pnl || 0;
         }
     });
     

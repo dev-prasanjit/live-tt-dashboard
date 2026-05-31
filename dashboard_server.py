@@ -491,6 +491,18 @@ def get_broker_shortcodes():
                 mapping[code.strip().upper()] = name.strip()
     return mapping
 
+def get_broker_shortcode(broker_name):
+    if not broker_name:
+        return "N/A"
+    shortcodes = get_broker_shortcodes()
+    for code, name in shortcodes.items():
+        if name.lower() in broker_name.lower() or broker_name.lower() in name.lower():
+            return code
+    # Clean and fallback
+    cleaned = re.sub(r'[^a-zA-Z]', '', broker_name)
+    return cleaned[:3].upper() if cleaned else "BRK"
+
+
 def generate_telegram_report(strategies, broker_filter=None):
     if broker_filter:
         lines = [f"📊 *Tradetron Report — {broker_filter}* 📊\n"]
@@ -735,7 +747,11 @@ def fetch_loop():
                                     pnl = float(s.get("all_pnl", 0) or 0) - baseline
                                     today_pnl_sum += pnl
                                     name = s.get("template", {}).get("name", "Unknown")
-                                    strategies_pnl[name] = pnl
+                                    run_counter = s.get("run_counter", 0)
+                                    broker_name = s.get("strategy_broker", {}).get("broker", {}).get("name", "")
+                                    shortcode = get_broker_shortcode(broker_name)
+                                    unique_name = f"{name} ({run_counter} - {shortcode})"
+                                    strategies_pnl[unique_name] = pnl
                             record_mtm_snapshot(today_pnl_sum, strategies_pnl)
                         except Exception as e:
                             print(f"Error recording backend MTM snapshot: {e}")
