@@ -503,7 +503,30 @@ function renderMtmChart() {
                         boxHeight: 8,
                         padding: 10,
                         usePointStyle: true,
-                        pointStyle: 'circle'
+                        pointStyle: 'circle',
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((dataset, i) => {
+                                const meta = chart.getDatasetMeta(i);
+                                const hidden = meta.hidden !== null ? meta.hidden : dataset.hidden;
+                                return {
+                                    text: dataset.label,
+                                    fillStyle: hidden ? 'rgba(100, 116, 139, 0.3)' : dataset.borderColor,
+                                    strokeStyle: hidden ? 'rgba(100, 116, 139, 0.3)' : dataset.borderColor,
+                                    fontColor: hidden ? 'rgba(100, 116, 139, 0.4)' : themeColors.text,
+                                    lineWidth: 0,
+                                    pointStyle: 'circle',
+                                    hidden: false, // Never show strikethrough
+                                    datasetIndex: i
+                                };
+                            });
+                        }
+                    },
+                    onClick: function(e, legendItem, legend) {
+                        const index = legendItem.datasetIndex;
+                        const meta = legend.chart.getDatasetMeta(index);
+                        meta.hidden = meta.hidden === null ? !legend.chart.data.datasets[index].hidden : !meta.hidden;
+                        legend.chart.update();
                     }
                 },
                 tooltip: {
