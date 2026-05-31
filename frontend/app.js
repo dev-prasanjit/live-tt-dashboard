@@ -464,8 +464,11 @@ function renderMtmChart() {
             const color = strategyColors[colorIdx % strategyColors.length];
             colorIdx++;
 
+            const colonIdx = name.indexOf(':');
+            const displayName = colonIdx !== -1 ? name.substring(colonIdx + 1) : name;
+
             datasets.push({
-                label: name,
+                label: displayName,
                 data: stratData,
                 borderColor: color,
                 borderWidth: 1.5,
@@ -613,11 +616,12 @@ async function recordMtmSnapshot() {
     const strategiesPnl = {};
     currentStrategies.forEach(strat => {
         if (strat.template && strat.template.name) {
+            const stratId = strat.id;
             const name = strat.template.name;
             const runCounter = strat.run_counter || 0;
             const brokerName = strat.strategy_broker?.broker?.name || '';
             const shortcode = getBrokerShortcode(brokerName);
-            const uniqueName = `${name} (${runCounter} - ${shortcode})`;
+            const uniqueName = `${stratId}:${name} (${runCounter} - ${shortcode})`;
             strategiesPnl[uniqueName] = strat.today_pnl || 0;
         }
     });
