@@ -748,10 +748,9 @@ def fetch_loop():
                                     today_pnl_sum += pnl
                                     strat_id = s.get("id")
                                     name = s.get("template", {}).get("name", "Unknown")
-                                    run_counter = s.get("run_counter", 0)
                                     broker_name = s.get("strategy_broker", {}).get("broker", {}).get("name", "")
                                     shortcode = get_broker_shortcode(broker_name)
-                                    unique_name = f"{strat_id}:{name} ({run_counter} - {shortcode})"
+                                    unique_name = f"{strat_id}:{name} - {shortcode}"
                                     strategies_pnl[unique_name] = pnl
                             record_mtm_snapshot(today_pnl_sum, strategies_pnl)
                         except Exception as e:

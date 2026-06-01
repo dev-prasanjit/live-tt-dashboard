@@ -618,10 +618,9 @@ async function recordMtmSnapshot() {
         if (strat.template && strat.template.name) {
             const stratId = strat.id;
             const name = strat.template.name;
-            const runCounter = strat.run_counter || 0;
             const brokerName = strat.strategy_broker?.broker?.name || '';
             const shortcode = getBrokerShortcode(brokerName);
-            const uniqueName = `${stratId}:${name} (${runCounter} - ${shortcode})`;
+            const uniqueName = `${stratId}:${name} - ${shortcode}`;
             strategiesPnl[uniqueName] = strat.today_pnl || 0;
         }
     });
