@@ -612,8 +612,14 @@ function renderIndividualStrategyCharts() {
                 <canvas id="canvas-${stratId}"></canvas>
             </div>
             <div class="flex justify-between items-center text-[10px] mt-1 font-semibold opacity-75">
-                <span class="opacity-50 uppercase tracking-wider">${duration} MIN</span>
                 <span>HIGH - <span class="positive">${formatSignedINR(highVal)}</span> · LOW - <span class="negative">${formatSignedINR(lowVal)}</span></span>
+                <button class="btn btn-ghost btn-xs p-1 opacity-60 hover:opacity-100 min-h-0 h-auto" onclick="downloadCanvasImage('canvas-${stratId}', '${displayName.replace(/[^a-zA-Z0-9]/g, '_')}_mtm_${selectedMtmDate}.png')">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
             </div>
         `;
 
@@ -784,8 +790,8 @@ async function loadHistoryDays() {
     }
 }
 
-function downloadChartImage() {
-    const canvas = document.getElementById('mtmChart');
+function downloadCanvasImage(canvasId, fileName) {
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
     const theme = localStorage.getItem('theme') || 'dark';
@@ -804,11 +810,15 @@ function downloadChartImage() {
 
     const imageURI = tempCanvas.toDataURL("image/png");
     const link = document.createElement('a');
-    link.download = `tradetron_mtm_${selectedMtmDate}.png`;
+    link.download = fileName;
     link.href = imageURI;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function downloadChartImage() {
+    downloadCanvasImage('mtmChart', `tradetron_mtm_${selectedMtmDate}.png`);
 }
 
 async function fetchMtmHistory(date) {
