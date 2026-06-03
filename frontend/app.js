@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize clock immediately and tick every second
     updateClockAndStatus();
     setInterval(updateClockAndStatus, 1000);
-    
+
     // Fetch indices immediately and poll every 5 seconds (only during IST market hours)
     fetchIndices();
     setInterval(async () => {
@@ -44,15 +44,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('refreshBtn').addEventListener('click', async () => {
         const btn = document.getElementById('refreshBtn');
         btn.style.opacity = '0.5';
-        
+
         try {
             console.log("Triggering forced live fetch on backend...");
             // Trigger the python backend to fetch live data from Tradetron instantly!
             await fetch('/api/force_refresh', { method: 'POST' });
-            
+
             // Wait 4 seconds for Playwright to grab the pages and rewrite data.json
             await new Promise(resolve => setTimeout(resolve, 4000));
-            
+
             // Re-render the dashboard using the fresh JSON
             await fetchData();
         } catch (err) {
@@ -111,15 +111,15 @@ async function fetchData() {
         const response = await fetch('data.json?t=' + new Date().getTime());
         if (!response.ok) throw new Error('Data not found');
         const strategies = await response.json();
-        
+
         // Filter valid LIVE AUTO strategies
         currentStrategies = strategies.filter(s => s && s.template && s.template.name && s.deployment_type === 'LIVE AUTO');
-        
+
         // Record baseline values for real-time delta tracking
         currentStrategies.forEach(strat => {
             strat.initial_sum_of_pnl = parseFloat(strat.sum_of_pnl) || 0;
             strat.initial_all_pnl = parseFloat(strat.all_pnl) || 0;
-            
+
             // Populate initial LTPs from data.json
             if (strat.calculated_positions) {
                 strat.calculated_positions.forEach(pos => {
@@ -180,10 +180,10 @@ function recalculateAndRender() {
                     const channel = pos.Instrument.toUpperCase().replace(/\s+/g, '-');
                     const ltp = latestLtps[channel] !== undefined ? latestLtps[channel] : (parseFloat(pos.ltp) || 0);
                     pos.ltp = ltp;
-                    
+
                     const price = parseFloat(pos.price) || 0;
                     const entryValue = pos.entry_value !== undefined ? parseFloat(pos.entry_value) : (price * qty);
-                    
+
                     // PnL = LTP * Quantity - Entry Value
                     pos.pnl = ltp * qty - entryValue;
                     strategyOpenPositionsPnl += pos.pnl;
@@ -254,7 +254,7 @@ function recalculateAndRender() {
         const brokerBg = brokerColorMap[brokerName] || 'transparent';
 
         const tr = document.createElement('tr');
-        
+
         let badgeColorClass = 'badge-neutral';
         const status = (strat.status || '').toLowerCase();
         if (status === 'active' || status === 'live-entered') {
@@ -284,10 +284,10 @@ function recalculateAndRender() {
     // Update Summary Cards
     document.getElementById('totalPnl').textContent = formatINR(totalPnl);
     document.getElementById('totalPnl').className = totalPnl >= 0 ? 'positive' : 'negative';
-    
+
     document.getElementById('totalCapital').textContent = formatINR(totalCapital);
     document.getElementById('activeStrats').textContent = activeCount;
-    
+
     const todayPnlPct = totalCapital > 0 ? (todayPnlSum / totalCapital) * 100 : 0;
     document.getElementById('todayPnl').innerHTML = `${formatINR(todayPnlSum)} <span class="text-sm font-semibold opacity-85 ml-2">(${todayPnlSum >= 0 ? '+' : ''}${todayPnlPct.toFixed(2)}%)</span>`;
     document.getElementById('todayPnl').className = 'stat-value text-2xl md:text-3xl font-extrabold ' + (todayPnlSum >= 0 ? 'positive' : 'negative');
@@ -298,7 +298,7 @@ function recalculateAndRender() {
     const pnlPct = totalCapital > 0 ? (totalPnl / totalCapital) * 100 : 0;
     document.getElementById('totalPnlPct').textContent = `${pnlPct.toFixed(2)}% Return on Capital`;
     document.getElementById('totalPnlPct').className = 'subtitle ' + (pnlPct >= 0 ? 'positive' : 'negative');
-    
+
     console.log(`Recalculation complete. Today's Est. P&L: ${formatINR(todayPnlSum)}`);
 }
 
@@ -313,7 +313,7 @@ function formatINR(num) {
 
 function renderMtmChart() {
     const ctx = document.getElementById('mtmChart').getContext('2d');
-    
+
     if (mtmChart) {
         mtmChart.destroy();
     }
@@ -324,7 +324,7 @@ function renderMtmChart() {
 
     const labels = mtmHistoryData.map(d => d.time);
     const dataPoints = mtmHistoryData.map(d => d.pnl);
-    
+
     // Determine line color based on last data point
     const lastVal = dataPoints.length > 0 ? dataPoints[dataPoints.length - 1] : 0;
 
@@ -335,7 +335,7 @@ function renderMtmChart() {
     const buffer = range > 0 ? range * 0.1 : 1000;
     const rawMin = Math.min(minVal - buffer, -1000);
     const rawMax = Math.max(maxVal + buffer, 1000);
-    
+
     // Round to nearest 5000 to keep grid lines and ticks clean
     const chartMin = Math.floor(rawMin / 5000) * 5000;
     const chartMax = Math.ceil(rawMax / 5000) * 5000;
@@ -372,15 +372,15 @@ function renderMtmChart() {
             const chart = context.chart;
             const { ctx: chartCtx, chartArea, scales } = chart;
             if (!chartArea || !scales || !scales.y) return '#10b981';
-            
+
             const yAxis = scales.y;
             const zero = yAxis.getPixelForValue(0);
             const top = chartArea.top;
             const bottom = chartArea.bottom;
-            
+
             const gradient = chartCtx.createLinearGradient(0, top, 0, bottom);
             const zeroPos = (zero - top) / (bottom - top);
-            
+
             if (zeroPos <= 0) {
                 return '#f43f5e'; // Entirely negative
             } else if (zeroPos >= 1) {
@@ -418,15 +418,15 @@ function renderMtmChart() {
             const chart = context.chart;
             const { ctx: chartCtx, chartArea, scales } = chart;
             if (!chartArea || !scales || !scales.y) return 'rgba(16, 185, 129, 0.08)';
-            
+
             const yAxis = scales.y;
             const zero = yAxis.getPixelForValue(0);
             const top = chartArea.top;
             const bottom = chartArea.bottom;
-            
+
             const gradient = chartCtx.createLinearGradient(0, top, 0, bottom);
             const zeroPos = (zero - top) / (bottom - top);
-            
+
             if (zeroPos <= 0) {
                 gradient.addColorStop(0, 'rgba(244, 63, 94, 0.15)');
                 gradient.addColorStop(1, 'rgba(244, 63, 94, 0.01)');
@@ -468,10 +468,10 @@ function renderMtmChart() {
                     padding: 12,
                     cornerRadius: 8,
                     callbacks: {
-                        title: function(tooltipItems) {
+                        title: function (tooltipItems) {
                             return tooltipItems[0].label + ' IST';
                         },
-                        label: function(context) {
+                        label: function (context) {
                             return context.dataset.label + ': ' + formatINR(context.raw);
                         }
                     }
@@ -484,13 +484,13 @@ function renderMtmChart() {
                     grid: {
                         color: (context) => {
                             if (context.tick && context.tick.value === 0) {
-                                  return themeColors.zeroLine;
+                                return themeColors.zeroLine;
                             }
                             return themeColors.grid;
                         },
                         lineWidth: (context) => {
                             if (context.tick && context.tick.value === 0) {
-                                  return 1.5;
+                                return 1.5;
                             }
                             return 1;
                         },
@@ -498,7 +498,7 @@ function renderMtmChart() {
                     },
                     ticks: {
                         color: themeColors.text,
-                        callback: function(value) {
+                        callback: function (value) {
                             if (Math.abs(value) >= 1000) {
                                 return '₹' + (value / 1000).toFixed(1) + 'k';
                             }
@@ -545,19 +545,19 @@ let sparklineCharts = {};
 function renderIndividualStrategyCharts() {
     const grid = document.getElementById('strategiesGrid');
     if (!grid) return;
-    
+
     // Clear grid and destroy previous charts
     grid.innerHTML = '';
     Object.values(sparklineCharts).forEach(chart => {
         if (chart) chart.destroy();
     });
     sparklineCharts = {};
-    
+
     const detailsEl = document.querySelector('details.collapse');
     if (detailsEl && !detailsEl.open) return;
-    
+
     if (mtmHistoryData.length === 0) return;
-    
+
     // Extract unique keys
     const strategyKeys = new Set();
     mtmHistoryData.forEach(pt => {
@@ -565,12 +565,12 @@ function renderIndividualStrategyCharts() {
             Object.keys(pt.strategies).forEach(key => strategyKeys.add(key));
         }
     });
-    
+
     strategyKeys.forEach((key) => {
         const colonIdx = key.indexOf(':');
         const stratId = colonIdx !== -1 ? key.substring(0, colonIdx) : '';
         const displayName = colonIdx !== -1 ? key.substring(colonIdx + 1) : key;
-        
+
         // Extract strategy data points
         const stratData = mtmHistoryData.map(pt => {
             if (pt.strategies && pt.strategies[key] !== undefined) {
@@ -578,12 +578,12 @@ function renderIndividualStrategyCharts() {
             }
             return null;
         }).filter(val => val !== null);
-        
+
         const latestVal = stratData.length > 0 ? stratData[stratData.length - 1] : 0;
         const highVal = stratData.length > 0 ? Math.max(...stratData) : 0;
         const lowVal = stratData.length > 0 ? Math.min(...stratData) : 0;
         const duration = getDurationMinutes(mtmHistoryData);
-        
+
         // Find capital for percentage return
         const stratObj = currentStrategies.find(s => s.id.toString() === stratId);
         let capital = 0;
@@ -593,15 +593,15 @@ function renderIndividualStrategyCharts() {
             capital = baseCap * multiplier;
         }
         const pnlPct = capital > 0 ? (latestVal / capital) * 100 : 0;
-        
+
         const card = document.createElement('div');
         const accentClass = latestVal >= 0 ? 'border-l-4 border-l-success' : 'border-l-4 border-l-error';
         card.className = `bg-base-100/40 backdrop-blur-md border border-base-content/10 rounded-xl p-4 flex flex-col gap-2 shadow-sm ${accentClass}`;
         card.id = `sparkline-card-${stratId}`;
-        
+
         const valClass = latestVal >= 0 ? 'positive' : 'negative';
         const pctClass = pnlPct >= 0 ? 'positive' : 'negative';
-        
+
         card.innerHTML = `
             <div class="flex justify-between items-start">
                 <span class="text-xs font-bold opacity-80 max-w-[70%] truncate" title="${displayName}">${displayName}</span>
@@ -616,9 +616,9 @@ function renderIndividualStrategyCharts() {
                 <span>HIGH - <span class="positive">${formatSignedINR(highVal)}</span> · LOW - <span class="negative">${formatSignedINR(lowVal)}</span></span>
             </div>
         `;
-        
+
         grid.appendChild(card);
-        
+
         // Draw sparkline chart
         drawSparkline(`canvas-${stratId}`, stratData, latestVal >= 0, stratId);
     });
@@ -628,9 +628,9 @@ function drawSparkline(canvasId, data, isPositive, stratId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
+
     const lineColor = isPositive ? '#10b981' : '#f43f5e';
-    
+
     // Create fill gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, 60);
     if (isPositive) {
@@ -640,7 +640,7 @@ function drawSparkline(canvasId, data, isPositive, stratId) {
         gradient.addColorStop(0, 'rgba(244, 63, 94, 0.15)');
         gradient.addColorStop(1, 'rgba(244, 63, 94, 0.01)');
     }
-    
+
     sparklineCharts[stratId] = new Chart(ctx, {
         type: 'line',
         data: {
@@ -670,7 +670,6 @@ function drawSparkline(canvasId, data, isPositive, stratId) {
         }
     });
 }
-}
 
 function getBrokerShortcode(brokerName) {
     if (!brokerName) return "N/A";
@@ -691,7 +690,7 @@ function getBrokerShortcode(brokerName) {
 
 async function recordMtmSnapshot() {
     const todayPnl = latestTodayPnl;
-    
+
     // Compile individual strategy P&Ls
     const strategiesPnl = {};
     currentStrategies.forEach(strat => {
@@ -704,12 +703,12 @@ async function recordMtmSnapshot() {
             strategiesPnl[uniqueName] = strat.today_pnl || 0;
         }
     });
-    
+
     try {
         await fetch('/api/record-mtm', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 pnl: todayPnl,
                 strategies: strategiesPnl
             })
@@ -754,27 +753,27 @@ async function loadHistoryDays() {
         const response = await fetch('/api/history-days');
         if (response.ok) {
             const days = await response.json();
-            
+
             const select = document.getElementById('historyDaysSelect');
             if (!select) return;
             select.innerHTML = '';
-            
+
             const todayStr = getTodayISTString();
             const uniqueDays = new Set(days);
             uniqueDays.add(todayStr);
-            
+
             const sortedDays = Array.from(uniqueDays).sort().reverse();
-            
+
             sortedDays.forEach(day => {
                 const opt = document.createElement('option');
                 opt.value = day;
                 opt.textContent = day === todayStr ? `${day} (Today)` : day;
                 select.appendChild(opt);
             });
-            
+
             selectedMtmDate = todayStr;
             select.value = todayStr;
-            
+
             select.addEventListener('change', async (e) => {
                 selectedMtmDate = e.target.value;
                 await fetchMtmHistory(selectedMtmDate);
@@ -814,7 +813,7 @@ function downloadChartImage() {
 
 async function fetchMtmHistory(date) {
     if (!date) date = getTodayISTString();
-    
+
     if (date === getTodayISTString() && isNseHolidayIST()) {
         mtmHistoryData = [
             { time: '09:15', pnl: 0 },
@@ -828,7 +827,7 @@ async function fetchMtmHistory(date) {
         const response = await fetch(`/api/mtm-history?date=${date}`);
         if (response.ok) {
             mtmHistoryData = await response.json();
-            
+
             // Sync last point with latestTodayPnl if market is closed
             if (date === getTodayISTString() && !isMarketOpenIST()) {
                 if (mtmHistoryData.length === 0) {
@@ -842,7 +841,7 @@ async function fetchMtmHistory(date) {
                     }
                 }
             }
-            
+
             renderMtmChart();
         }
     } catch (err) {
@@ -853,10 +852,10 @@ async function fetchMtmHistory(date) {
 function isMarketOpenIST() {
     if (isNseHolidayIST()) return false;
     const now = new Date();
-    
+
     // Convert current time to IST components
     const istDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-    
+
     const day = istDate.getDay(); // 0 = Sunday, 6 = Saturday
     if (day === 0 || day === 6) return false;
 
@@ -878,19 +877,19 @@ function updateClockAndStatus() {
     // Convert current time to IST components
     const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
     const istTimeStr = now.toLocaleTimeString('en-US', options);
-    
+
     // Update digital watch clock text
     const clockTextEl = document.querySelector('#watchBadge .clock-text');
     if (clockTextEl) {
         clockTextEl.textContent = `${istTimeStr} IST`;
     }
-    
+
     // Check if market is open
     const open = isMarketOpenIST();
     const badge = document.getElementById('watchBadge');
     if (!badge) return;
     const statusText = badge.querySelector('.status-text');
-    
+
     if (open) {
         if (!badge.classList.contains('badge-success')) {
             badge.className = 'badge badge-lg badge-success gap-2 py-4 px-4 border border-base-content/10 text-success-content';
@@ -922,30 +921,30 @@ async function fetchIndices() {
 function updateIndexDOM(elemId, data) {
     const el = document.getElementById(elemId);
     if (!el || !data) return;
-    
+
     const valEl = el.querySelector('.index-val');
     const changeEl = el.querySelector('.index-change');
     const rowEl = el.querySelector('.index-row');
     if (!valEl || !changeEl) return;
-    
+
     // Format price with comma
     const priceFormatted = new Intl.NumberFormat('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(data.price);
-    
+
     valEl.textContent = priceFormatted;
-    
+
     // Format change
     const sign = data.change >= 0 ? '+' : '';
     const changeFormatted = new Intl.NumberFormat('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(data.change);
-    
+
     const pctFormatted = data.pct.toFixed(2);
     changeEl.textContent = `${sign}${changeFormatted} (${sign}${pctFormatted}%)`;
-    
+
     // Apply styling class based on value
     if (rowEl) {
         if (data.change >= 0) {
