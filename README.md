@@ -19,7 +19,7 @@ A real-time, self-healing analytics and reporting dashboard for [Tradetron](http
 - **Dual Theme Switcher (Light / Dark)** — A clean toggle switch in the header that swaps between the `light` and `dark` themes. Toggling themes updates the page colors instantly, saves your choice in `localStorage`, and redraws the Chart.js canvas with high-contrast text and grid colors. FOUC (flash of unstyled content) is prevented by an early-execution inline theme script.
 - **Zero-Crossing MTM Chart** — An interactive intraday P&L line graph (using Chart.js) that renders instantly with custom gradients. The chart line and area fill dynamically change colors at the `0` baseline: **emerald green** when today's P&L is positive, and **rose red** when below zero.
 - **Color-Coded Status Badges & Broker Grouping** — Strategy statuses (e.g. `Active`, `Live-Entered`, `Paused`, `Exited`, `Error`) are color-coded in the table using matching daisyUI status classes. Broker cells inside the table are dynamically assigned distinctive background colors from a curated palette to visually group strategies by broker.
-- **Indices & Digital Clock Tracker** — Embedded tracker scraping live Google Finance tickers for Nifty 50, Sensex, Bank Nifty, and India VIX. Updates every 5 seconds during market hours. Includes a digital watch displaying the current IST time including seconds and current market state (`Live` vs `Closed`).
+- **Indices & Digital Clock Tracker** — Embedded tracker scraping live Google Finance tickers for Nifty 50, Sensex, Bank Nifty, and India VIX. Updates every 10 seconds during market hours. Includes a digital watch displaying the current IST time including seconds and current market state (`Live` vs `Closed`).
 - **Telegram Command Console** — Sends automated P&L reports every 30 minutes from 9:30 AM to 3:30 PM IST (with a 10-minute grace period to ensure the 15:30 close report is successfully sent). Also listens for manual `/report` or `/status` commands, which support broker-specific filtering (e.g. `/report FT` for Flattrade) using shortcodes configured in your environment.
 
 ---
@@ -82,10 +82,10 @@ All dashboard files are located under the `tradetron_dashboard/` directory:
    - This utility loads Chromium, enters credentials from `.env`, solves the mathematical ALTCHA proof-of-work captcha, submits the form, waits for dashboard redirection, and writes fresh cookies back to disk. The main server thread reloads the new cookies and resumes.
 3. **Indices and Watch Threads**:
    - The server maintains a separate thread that queries Google Finance HTML endpoints for Nifty 50, Sensex, Bank Nifty, and India VIX. Prices are scraped and exposed via `/api/live-indices`.
-   - During market hours, updates run every 5 seconds. Off-market, they scale back to every 60 seconds.
+   - During market hours, updates run every 10 seconds. Off-market, they scale back to every 60 seconds.
 4. **Calculations and Rendering**:
    - When market opens, the scraper records baseline metrics (`all_pnl_at_market_open`) in `market_open_baselines.json`.
-   - The frontend `app.js` polls `/api/live-prices` every 5 seconds (only during market hours).
+   - The frontend `app.js` polls `/api/live-prices` every 10 seconds (only during market hours).
    - It applies these prices to open positions to calculate real-time strategy values:
      $$\text{Position P\&L} = (\text{LTP} \times \text{Quantity}) - \text{Entry Value}$$
      $$\text{Strategy Run P\&L} = \text{Open Positions P\&L} + \text{Closed Positions P\&L}$$

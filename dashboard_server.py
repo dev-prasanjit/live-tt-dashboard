@@ -468,7 +468,7 @@ def indices_loop():
         try:
             if is_market_open():
                 fetch_indices()
-                time.sleep(5)
+                time.sleep(10)
             else:
                 if latest_indices["NIFTY"]["price"] == 0.0 or latest_indices["INDIA_VIX"]["price"] == 0.0:
                     fetch_indices()

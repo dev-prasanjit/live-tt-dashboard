@@ -32,13 +32,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateClockAndStatus();
     setInterval(updateClockAndStatus, 1000);
 
-    // Fetch indices immediately and poll every 5 seconds (only during IST market hours)
+    // Fetch indices immediately and poll every 10 seconds (only during IST market hours)
     fetchIndices();
     setInterval(async () => {
         if (isMarketOpenIST()) {
             await fetchIndices();
         }
-    }, 5000);
+    }, 10000);
 
     // Manual Refresh Button Event Handler
     document.getElementById('refreshBtn').addEventListener('click', async () => {
@@ -69,13 +69,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         fetchData();
     }, 300000); // 5 minutes
 
-    // Poll live prices from backend and recalculate PnLs every 5 seconds (only during IST market hours)
+    // Poll live prices from backend and recalculate PnLs every 10 seconds (only during IST market hours)
     setInterval(async () => {
         if (isMarketOpenIST()) {
             await fetchLivePrices();
             recalculateAndRender();
         }
-    }, 5000);
+    }, 10000);
 
     // Fetch available history days and MTM history on load
     await loadHistoryDays();
