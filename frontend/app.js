@@ -94,6 +94,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             await fetchMtmHistory(selectedMtmDate);
         }
     }, 60000); // 1 minute
+    // All Strategies MTM Accordion toggle listener
+    const detailsEl = document.querySelector('details.collapse');
+    if (detailsEl) {
+        detailsEl.addEventListener('toggle', (e) => {
+            if (e.target.open) {
+                renderIndividualStrategyCharts();
+            }
+        });
+    }
 });
 
 async function fetchData() {
@@ -279,8 +288,9 @@ function recalculateAndRender() {
     document.getElementById('totalCapital').textContent = formatINR(totalCapital);
     document.getElementById('activeStrats').textContent = activeCount;
     
-    document.getElementById('todayPnl').textContent = formatINR(todayPnlSum);
-    document.getElementById('todayPnl').className = todayPnlSum >= 0 ? 'positive' : 'negative';
+    const todayPnlPct = totalCapital > 0 ? (todayPnlSum / totalCapital) * 100 : 0;
+    document.getElementById('todayPnl').innerHTML = `${formatINR(todayPnlSum)} <span class="text-sm font-semibold opacity-85 ml-2">(${todayPnlSum >= 0 ? '+' : ''}${todayPnlPct.toFixed(2)}%)</span>`;
+    document.getElementById('todayPnl').className = 'stat-value text-2xl md:text-3xl font-extrabold ' + (todayPnlSum >= 0 ? 'positive' : 'negative');
 
     // Store latest Today's P&L for chart and snapshot synchronization
     latestTodayPnl = todayPnlSum;
@@ -315,21 +325,12 @@ function renderMtmChart() {
     const labels = mtmHistoryData.map(d => d.time);
     const dataPoints = mtmHistoryData.map(d => d.pnl);
     
-    // Determine line color based on last data point (for fallback / subtitle)
+    // Determine line color based on last data point
     const lastVal = dataPoints.length > 0 ? dataPoints[dataPoints.length - 1] : 0;
 
-    // Collect all data values (overall and strategies) to compute min/max range
-    let allValues = [...dataPoints];
-    mtmHistoryData.forEach(pt => {
-        if (pt.strategies) {
-            Object.values(pt.strategies).forEach(val => {
-                if (val !== null && val !== undefined) allValues.push(val);
-            });
-        }
-    });
-
-    const minVal = allValues.length > 0 ? Math.min(...allValues) : 0;
-    const maxVal = allValues.length > 0 ? Math.max(...allValues) : 0;
+    // Collect Total P&L data values to compute min/max range
+    const minVal = dataPoints.length > 0 ? Math.min(...dataPoints) : 0;
+    const maxVal = dataPoints.length > 0 ? Math.max(...dataPoints) : 0;
     const range = maxVal - minVal;
     const buffer = range > 0 ? range * 0.1 : 1000;
     const rawMin = Math.min(minVal - buffer, -1000);
@@ -347,10 +348,23 @@ function renderMtmChart() {
         subtitleEl.className = 'chart-subtitle text-xs font-semibold ' + (lastVal >= 0 ? 'positive' : 'negative');
     }
 
-    // Build datasets
+    // Set high/low MTM values on the main chart
+    const mainHigh = dataPoints.length > 0 ? Math.max(...dataPoints) : 0;
+    const mainLow = dataPoints.length > 0 ? Math.min(...dataPoints) : 0;
+    const highEl = document.getElementById('mainChartHigh');
+    const lowEl = document.getElementById('mainChartLow');
+    if (highEl) {
+        highEl.textContent = formatSignedINR(mainHigh);
+        highEl.className = 'font-bold ' + (mainHigh >= 0 ? 'positive' : 'negative');
+    }
+    if (lowEl) {
+        lowEl.textContent = formatSignedINR(mainLow);
+        lowEl.className = 'font-bold ' + (mainLow >= 0 ? 'positive' : 'negative');
+    }
+
+    // Build datasets (Total P&L only)
     const datasets = [];
 
-    // 1. Total P&L Dataset
     datasets.push({
         label: "Total P&L",
         data: dataPoints,
@@ -429,57 +443,6 @@ function renderMtmChart() {
         }
     });
 
-    // 2. Individual Strategy Datasets
-    if (mtmHistoryData.length > 0) {
-        const strategyNames = new Set();
-        mtmHistoryData.forEach(pt => {
-            if (pt.strategies) {
-                Object.keys(pt.strategies).forEach(name => strategyNames.add(name));
-            }
-        });
-
-        // Curated, high-contrast, premium colors for strategy lines
-        const strategyColors = [
-            '#6366f1', // Indigo
-            '#3b82f6', // Blue
-            '#a855f7', // Purple
-            '#ec4899', // Pink
-            '#0ea5e9', // Sky
-            '#14b8a6', // Teal
-            '#f59e0b', // Amber
-            '#84cc16', // Lime
-            '#e11d48', // Rose
-            '#94a3b8'  // Slate
-        ];
-
-        let colorIdx = 0;
-        strategyNames.forEach(name => {
-            const stratData = mtmHistoryData.map(pt => {
-                if (pt.strategies && pt.strategies[name] !== undefined) {
-                    return pt.strategies[name];
-                }
-                return null;
-            });
-
-            const color = strategyColors[colorIdx % strategyColors.length];
-            colorIdx++;
-
-            const colonIdx = name.indexOf(':');
-            const displayName = colonIdx !== -1 ? name.substring(colonIdx + 1) : name;
-
-            datasets.push({
-                label: displayName,
-                data: stratData,
-                borderColor: color,
-                borderWidth: 1.5,
-                pointRadius: 0,
-                tension: 0.3,
-                fill: false,
-                hidden: true // Hidden by default, toggled via clicking the legend
-            });
-        });
-    }
-
     mtmChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -496,41 +459,7 @@ function renderMtmChart() {
             },
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'start',
-                    labels: {
-                        color: themeColors.text,
-                        font: { size: 10, family: 'Inter', weight: '500' },
-                        boxWidth: 8,
-                        boxHeight: 8,
-                        padding: 10,
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        generateLabels: function(chart) {
-                            const datasets = chart.data.datasets;
-                            return datasets.map((dataset, i) => {
-                                const meta = chart.getDatasetMeta(i);
-                                const hidden = meta.hidden !== null ? meta.hidden : dataset.hidden;
-                                return {
-                                    text: dataset.label,
-                                    fillStyle: hidden ? 'rgba(100, 116, 139, 0.3)' : dataset.borderColor,
-                                    strokeStyle: hidden ? 'rgba(100, 116, 139, 0.3)' : dataset.borderColor,
-                                    fontColor: hidden ? 'rgba(100, 116, 139, 0.4)' : themeColors.text,
-                                    lineWidth: 0,
-                                    pointStyle: 'circle',
-                                    hidden: false, // Never show strikethrough
-                                    datasetIndex: i
-                                };
-                            });
-                        }
-                    },
-                    onClick: function(e, legendItem, legend) {
-                        const index = legendItem.datasetIndex;
-                        const meta = legend.chart.getDatasetMeta(index);
-                        meta.hidden = meta.hidden === null ? !legend.chart.data.datasets[index].hidden : !meta.hidden;
-                        legend.chart.update();
-                    }
+                    display: false
                 },
                 tooltip: {
                     backgroundColor: 'rgba(15, 23, 42, 0.9)',
@@ -555,13 +484,13 @@ function renderMtmChart() {
                     grid: {
                         color: (context) => {
                             if (context.tick && context.tick.value === 0) {
-                                return themeColors.zeroLine;
+                                  return themeColors.zeroLine;
                             }
                             return themeColors.grid;
                         },
                         lineWidth: (context) => {
                             if (context.tick && context.tick.value === 0) {
-                                return 1.5;
+                                  return 1.5;
                             }
                             return 1;
                         },
@@ -590,6 +519,157 @@ function renderMtmChart() {
             }
         }
     });
+
+    // Render individual strategy cards in the lower section
+    renderIndividualStrategyCharts();
+}
+
+function formatSignedINR(num) {
+    const sign = num >= 0 ? '+' : '';
+    return `${sign}${formatINR(num)}`;
+}
+
+function getDurationMinutes(historyData) {
+    if (!historyData || historyData.length < 2) return 0;
+    const startStr = historyData[0].time; // "HH:MM"
+    const endStr = historyData[historyData.length - 1].time; // "HH:MM"
+    const [startH, startM] = startStr.split(':').map(Number);
+    const [endH, endM] = endStr.split(':').map(Number);
+    let diff = (endH * 60 + endM) - (startH * 60 + startM);
+    if (diff < 0) diff += 24 * 60;
+    return diff;
+}
+
+let sparklineCharts = {};
+
+function renderIndividualStrategyCharts() {
+    const grid = document.getElementById('strategiesGrid');
+    if (!grid) return;
+    
+    // Clear grid and destroy previous charts
+    grid.innerHTML = '';
+    Object.values(sparklineCharts).forEach(chart => {
+        if (chart) chart.destroy();
+    });
+    sparklineCharts = {};
+    
+    const detailsEl = document.querySelector('details.collapse');
+    if (detailsEl && !detailsEl.open) return;
+    
+    if (mtmHistoryData.length === 0) return;
+    
+    // Extract unique keys
+    const strategyKeys = new Set();
+    mtmHistoryData.forEach(pt => {
+        if (pt.strategies) {
+            Object.keys(pt.strategies).forEach(key => strategyKeys.add(key));
+        }
+    });
+    
+    strategyKeys.forEach((key) => {
+        const colonIdx = key.indexOf(':');
+        const stratId = colonIdx !== -1 ? key.substring(0, colonIdx) : '';
+        const displayName = colonIdx !== -1 ? key.substring(colonIdx + 1) : key;
+        
+        // Extract strategy data points
+        const stratData = mtmHistoryData.map(pt => {
+            if (pt.strategies && pt.strategies[key] !== undefined) {
+                return pt.strategies[key];
+            }
+            return null;
+        }).filter(val => val !== null);
+        
+        const latestVal = stratData.length > 0 ? stratData[stratData.length - 1] : 0;
+        const highVal = stratData.length > 0 ? Math.max(...stratData) : 0;
+        const lowVal = stratData.length > 0 ? Math.min(...stratData) : 0;
+        const duration = getDurationMinutes(mtmHistoryData);
+        
+        // Find capital for percentage return
+        const stratObj = currentStrategies.find(s => s.id.toString() === stratId);
+        let capital = 0;
+        if (stratObj) {
+            const baseCap = stratObj.template.capital_required ? parseFloat(stratObj.template.capital_required) : 0;
+            const multiplier = stratObj.minimum_multiple ? parseFloat(stratObj.minimum_multiple) : 1;
+            capital = baseCap * multiplier;
+        }
+        const pnlPct = capital > 0 ? (latestVal / capital) * 100 : 0;
+        
+        const card = document.createElement('div');
+        const accentClass = latestVal >= 0 ? 'border-l-4 border-l-success' : 'border-l-4 border-l-error';
+        card.className = `bg-base-100/40 backdrop-blur-md border border-base-content/10 rounded-xl p-4 flex flex-col gap-2 shadow-sm ${accentClass}`;
+        card.id = `sparkline-card-${stratId}`;
+        
+        const valClass = latestVal >= 0 ? 'positive' : 'negative';
+        const pctClass = pnlPct >= 0 ? 'positive' : 'negative';
+        
+        card.innerHTML = `
+            <div class="flex justify-between items-start">
+                <span class="text-xs font-bold opacity-80 max-w-[70%] truncate" title="${displayName}">${displayName}</span>
+                <span class="text-xs font-bold ${pctClass}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</span>
+            </div>
+            <div class="text-lg font-bold ${valClass} mt-0.5">${formatSignedINR(latestVal)}</div>
+            <div class="h-[60px] w-full mt-1">
+                <canvas id="canvas-${stratId}"></canvas>
+            </div>
+            <div class="flex justify-between items-center text-[10px] mt-1 font-semibold opacity-75">
+                <span class="opacity-50 uppercase tracking-wider">${duration} MIN</span>
+                <span>HIGH - <span class="positive">${formatSignedINR(highVal)}</span> · LOW - <span class="negative">${formatSignedINR(lowVal)}</span></span>
+            </div>
+        `;
+        
+        grid.appendChild(card);
+        
+        // Draw sparkline chart
+        drawSparkline(`canvas-${stratId}`, stratData, latestVal >= 0, stratId);
+    });
+}
+
+function drawSparkline(canvasId, data, isPositive, stratId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const lineColor = isPositive ? '#10b981' : '#f43f5e';
+    
+    // Create fill gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 60);
+    if (isPositive) {
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+    } else {
+        gradient.addColorStop(0, 'rgba(244, 63, 94, 0.15)');
+        gradient.addColorStop(1, 'rgba(244, 63, 94, 0.01)');
+    }
+    
+    sparklineCharts[stratId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: new Array(data.length).fill(''),
+            datasets: [{
+                data: data,
+                borderColor: lineColor,
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.3,
+                fill: true,
+                backgroundColor: gradient
+            }]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            }
+        }
+    });
+}
 }
 
 function getBrokerShortcode(brokerName) {
