@@ -152,8 +152,27 @@
                 <div class="chart-wrapper h-[350px] md:h-[400px] relative w-full">
                     <canvas id="mtmChart"></canvas>
                 </div>
+                <div class="flex justify-end text-xs opacity-75 font-semibold mt-2 gap-4" id="mainChartHighLow">
+                    <span>HIGH - <span id="mainChartHigh" class="positive">₹0.00</span></span>
+                    <span>LOW - <span id="mainChartLow" class="negative">₹0.00</span></span>
+                </div>
             </div>
         </section>
+
+        <!-- All Strategies MTM Section (Accordion/Collapse) -->
+        <details class="collapse bg-base-100/50 backdrop-blur-lg border border-base-content/10 shadow-xl rounded-2xl">
+            <summary class="collapse-title text-lg font-bold flex items-center justify-between cursor-pointer p-6">
+                <span>All Strategies MTM</span>
+                <svg class="w-5 h-5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </summary>
+            <div class="collapse-content p-6 pt-0">
+                <div id="strategiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Strategy cards will be rendered here dynamically via JS -->
+                </div>
+            </div>
+        </details>
 
         <!-- Strategies Table Section -->
         <section class="card bg-base-100/50 backdrop-blur-lg border border-base-content/10 shadow-xl overflow-hidden">

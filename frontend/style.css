@@ -68,3 +68,8 @@
     transform: rotate(180deg);
     transition: transform 0.4s ease;
 }
+
+/* Accordion details open/close arrow rotation */
+details[open] summary svg {
+    transform: rotate(180deg);
+}
