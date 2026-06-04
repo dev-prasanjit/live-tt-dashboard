@@ -20,7 +20,7 @@ A real-time, self-healing analytics and reporting dashboard for [Tradetron](http
 - **Zero-Crossing MTM Chart** — An interactive intraday P&L line graph (using Chart.js) that renders instantly with custom gradients. The chart line and area fill dynamically change colors at the `0` baseline: **emerald green** when today's P&L is positive, and **rose red** when below zero.
 - **Color-Coded Status Badges & Broker Grouping** — Strategy statuses (e.g. `Active`, `Live-Entered`, `Paused`, `Exited`, `Error`) are color-coded in the table using matching daisyUI status classes. Broker cells inside the table are dynamically assigned distinctive background colors from a curated palette to visually group strategies by broker.
 - **Indices & Digital Clock Tracker** — Embedded tracker scraping live Google Finance tickers for Nifty 50, Sensex, Bank Nifty, and India VIX. Updates every 10 seconds during market hours. Includes a digital watch displaying the current IST time including seconds and current market state (`Live` vs `Closed`).
-- **Telegram Command Console** — Sends automated P&L reports every 30 minutes from 9:30 AM to 3:30 PM IST (with a 10-minute grace period to ensure the 15:30 close report is successfully sent). Also listens for manual `/report` or `/status` commands, which support broker-specific filtering (e.g. `/report FT` for Flattrade) using shortcodes configured in your environment.
+- **Telegram Command Console** — Sends automated P&L reports every 30 minutes from 9:30 AM to 3:30 PM IST (with a 15-minute grace period to ensure the 15:35 close report is successfully sent). Also listens for manual `/report` or `/status` commands, which support broker-specific filtering (e.g. `/report FT` for Flattrade) using shortcodes configured in your environment.
 
 ---
 
@@ -95,7 +95,7 @@ All dashboard files are located under the `tradetron_dashboard/` directory:
 5. **Dynamic MTM Snapshots**:
    - The client posts the current cumulative Today's Est. P&L value and individual strategy P&Ls to the server's `/api/record-mtm` endpoint every minute.
    - The server records the snapshot in `history/mtm_YYYY-MM-DD.json` labeled with the current IST timestamp.
-   - At 15:30 IST, if the market closes, snapshots freeze at the 15:30 value. They are preserved until 2:00 AM IST of the following day to prevent the line graph from disappearing when you open the page after market hours.
+   - At 15:35 IST, if the market closes, snapshots freeze at the 15:35 value. They are preserved until 2:00 AM IST of the following day to prevent the line graph from disappearing when you open the page after market hours.
    - For historical days (non-today), the client queries `/api/mtm-history?date=YYYY-MM-DD` which returns the static recorded history file from disk.
 
 ---
