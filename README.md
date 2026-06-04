@@ -84,7 +84,7 @@ All dashboard files are located under the `tradetron_dashboard/` directory:
    - The server maintains a separate thread that queries Google Finance HTML endpoints for Nifty 50, Sensex, Bank Nifty, and India VIX. Prices are scraped and exposed via `/api/live-indices`.
    - During market hours, updates run every 10 seconds. Off-market, they scale back to every 60 seconds.
 4. **Calculations and Rendering**:
-   - When market opens, the scraper records baseline metrics (`all_pnl_at_market_open`) in `market_open_baselines.json`.
+    - At 9:10 AM (5 minutes before market open), the scraper records/updates baseline metrics (`all_pnl_at_market_open`) in `market_open_baselines.json`.
    - The frontend `app.js` polls `/api/live-prices` every 10 seconds (only during market hours).
    - It applies these prices to open positions to calculate real-time strategy values:
      $$\text{Position P\&L} = (\text{LTP} \times \text{Quantity}) - \text{Entry Value}$$

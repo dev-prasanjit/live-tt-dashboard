@@ -205,6 +205,7 @@ load_mtm_history()
 
 # Event to communicate between the HTTP server thread and the Playwright fetch loop thread
 trigger_fetch_event = threading.Event()
+last_baseline_update_date = None
 
 class DashboardHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -346,9 +347,11 @@ def record_mtm_snapshot(pnl_value, strategies_pnl=None):
     print(f"[{now.strftime('%H:%M:%S')}] MTM snapshot recorded: {time_str} = ₹{pnl_value:,.2f} ({len(mtm_history)} points)")
 
 def get_or_create_baselines(strategies):
+    global last_baseline_update_date
     # Get today's date in IST
     tz = pytz.timezone('Asia/Kolkata')
-    today_str = datetime.datetime.now(tz).strftime('%Y-%m-%d')
+    now = datetime.datetime.now(tz)
+    today_str = now.strftime('%Y-%m-%d')
     
     baselines = {}
     if os.path.exists(BASELINES_FILE):
@@ -360,11 +363,17 @@ def get_or_create_baselines(strategies):
             
     today_baselines = baselines.get(today_str, {})
     
+    # Force overwrite today's baseline if:
+    # 1. We are in the 9:10 AM to 9:15 AM window (pre-market)
+    # 2. Or the baseline for today does not exist yet
+    is_premarket_window = (now.hour == 9 and 10 <= now.minute < 15)
+    force_overwrite = is_premarket_window or (not today_baselines)
+    
     updated = False
     for s in strategies:
         strat_id = str(s["id"])
-        if strat_id not in today_baselines:
-            # First time seeing this strategy today. Save its current all_pnl as baseline.
+        if force_overwrite or (strat_id not in today_baselines):
+            # Save its current all_pnl as baseline.
             today_baselines[strat_id] = float(s.get("all_pnl", 0) or 0)
             updated = True
             
@@ -373,9 +382,14 @@ def get_or_create_baselines(strategies):
         try:
             with open(BASELINES_FILE, 'w') as f:
                 json.dump(baselines, f, indent=4)
+            print(f"[{now.strftime('%H:%M:%S')}] Saved baseline for {today_str} (Force Overwrite: {force_overwrite})")
         except Exception as e:
             print(f"Error saving baselines: {e}")
             
+    # Mark that we have successfully done the 9:10 AM baseline update for today
+    if is_premarket_window:
+        last_baseline_update_date = today_str
+        
     return today_baselines
 
 def is_nse_holiday(date_obj):
@@ -393,14 +407,15 @@ def is_market_open():
     return market_start <= now <= market_end
 
 def is_within_notification_window():
-    """Like is_market_open() but with a 5-minute grace period after market close.
-    This ensures the 15:30 Telegram notification fires even if the 5-minute
-    fetch cycle timer ends a few seconds (or minutes) after 15:30:00."""
+    """Like is_market_open() but starting at 9:10 AM (5 mins before market open)
+    and with a grace period after market close. This ensures the 15:30 Telegram
+    notification fires even if the 5-minute fetch cycle timer ends a few seconds
+    (or minutes) after 15:30:00."""
     tz = pytz.timezone('Asia/Kolkata')
     now = datetime.datetime.now(tz)
     if now.weekday() >= 5: return False
     if is_nse_holiday(now): return False
-    window_start = now.replace(hour=9, minute=15, second=0, microsecond=0)
+    window_start = now.replace(hour=9, minute=10, second=0, microsecond=0)
     window_end = now.replace(hour=15, minute=40, second=0, microsecond=0)
     return window_start <= now <= window_end
 
@@ -642,6 +657,19 @@ def fetch_loop():
                         if trigger_fetch_event.is_set():
                             triggered = True
                             break
+                        
+                        # Pre-market baseline check at 9:10 AM (5 mins before market open)
+                        tz = pytz.timezone('Asia/Kolkata')
+                        now = datetime.datetime.now(tz)
+                        if now.weekday() < 5 and not is_nse_holiday(now):
+                            if now.hour == 9 and 10 <= now.minute < 15:
+                                global last_baseline_update_date
+                                today_str = now.strftime('%Y-%m-%d')
+                                if last_baseline_update_date != today_str:
+                                    print(f"[{now.strftime('%H:%M:%S')}] Pre-market baseline window (09:10 - 09:15) reached. Triggering baseline update!")
+                                    triggered = True
+                                    break
+                                    
                         page.wait_for_timeout(1000)
                         
                     trigger_fetch_event.clear() # Reset flag immediately
