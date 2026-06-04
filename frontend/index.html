@@ -160,14 +160,14 @@
         </section>
 
         <!-- All Strategies MTM Section (Accordion/Collapse) -->
-        <details class="collapse bg-base-100/50 backdrop-blur-lg border border-base-content/10 shadow-xl rounded-2xl">
-            <summary class="collapse-title text-lg font-bold flex items-center justify-between cursor-pointer p-6">
+        <details id="strategiesMtmDetails" class="bg-base-100/50 backdrop-blur-lg border border-base-content/10 shadow-xl rounded-2xl p-6">
+            <summary class="text-lg font-bold flex items-center justify-between cursor-pointer">
                 <span>All Strategies MTM</span>
                 <svg class="w-5 h-5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </summary>
-            <div class="collapse-content p-6 pt-0">
+            <div class="mt-6">
                 <div id="strategiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     <!-- Strategy cards will be rendered here dynamically via JS -->
                 </div>
@@ -201,6 +201,6 @@
 
     </div>
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>

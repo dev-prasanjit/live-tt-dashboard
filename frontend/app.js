@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 60000); // 1 minute
     // All Strategies MTM Accordion toggle listener
-    const detailsEl = document.querySelector('details.collapse');
+    const detailsEl = document.getElementById('strategiesMtmDetails');
     if (detailsEl) {
         detailsEl.addEventListener('toggle', (e) => {
             if (e.target.open) {
@@ -554,7 +554,7 @@ function renderIndividualStrategyCharts() {
     });
     sparklineCharts = {};
 
-    const detailsEl = document.querySelector('details.collapse');
+    const detailsEl = document.getElementById('strategiesMtmDetails');
     if (detailsEl && !detailsEl.open) return;
 
     if (mtmHistoryData.length === 0) return;
