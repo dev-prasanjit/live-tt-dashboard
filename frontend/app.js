@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
             renderMtmChart();
+            renderIndividualStrategyCharts();
         });
     }
 
@@ -830,6 +831,7 @@ async function fetchMtmHistory(date) {
             { time: '15:30', pnl: 0 }
         ];
         renderMtmChart();
+        renderIndividualStrategyCharts();
         return;
     }
 
@@ -853,6 +855,7 @@ async function fetchMtmHistory(date) {
             }
 
             renderMtmChart();
+            renderIndividualStrategyCharts();
         }
     } catch (err) {
         console.error('Failed to fetch MTM history:', err);
