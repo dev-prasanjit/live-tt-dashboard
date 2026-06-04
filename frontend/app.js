@@ -828,7 +828,7 @@ async function fetchMtmHistory(date) {
     if (date === getTodayISTString() && isNseHolidayIST()) {
         mtmHistoryData = [
             { time: '09:15', pnl: 0 },
-            { time: '15:30', pnl: 0 }
+            { time: '15:35', pnl: 0 }
         ];
         renderMtmChart();
         renderIndividualStrategyCharts();
@@ -843,13 +843,13 @@ async function fetchMtmHistory(date) {
             // Sync last point with latestTodayPnl if market is closed
             if (date === getTodayISTString() && !isMarketOpenIST()) {
                 if (mtmHistoryData.length === 0) {
-                    mtmHistoryData.push({ time: '15:30', pnl: latestTodayPnl });
+                    mtmHistoryData.push({ time: '15:35', pnl: latestTodayPnl });
                 } else {
                     const lastPoint = mtmHistoryData[mtmHistoryData.length - 1];
-                    if (lastPoint.time === '15:30') {
+                    if (lastPoint.time === '15:35') {
                         lastPoint.pnl = latestTodayPnl;
                     } else {
-                        mtmHistoryData.push({ time: '15:30', pnl: latestTodayPnl });
+                        mtmHistoryData.push({ time: '15:35', pnl: latestTodayPnl });
                     }
                 }
             }
@@ -875,11 +875,11 @@ function isMarketOpenIST() {
     const hour = istDate.getHours();
     const minute = istDate.getMinutes();
 
-    // Market hours: 09:15 to 15:30
+    // Market hours: 09:15 to 15:35
     if (hour < 9) return false;
     if (hour === 9 && minute < 15) return false;
     if (hour > 15) return false;
-    if (hour === 15 && minute > 30) return false;
+    if (hour === 15 && minute > 35) return false;
 
     return true;
 }

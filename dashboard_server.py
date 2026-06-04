@@ -311,10 +311,10 @@ def record_mtm_snapshot(pnl_value, strategies_pnl=None):
     now = datetime.datetime.now(tz)
     today_str = now.strftime('%Y-%m-%d')
     
-    # Cap timestamp to 15:30 if current time is past 15:30 IST on the same trading day
-    market_close_time = now.replace(hour=15, minute=30, second=0, microsecond=0)
+    # Cap timestamp to 15:35 if current time is past 15:35 IST on the same trading day
+    market_close_time = now.replace(hour=15, minute=35, second=0, microsecond=0)
     if now > market_close_time:
-        time_str = "15:30"
+        time_str = "15:35"
     else:
         time_str = now.strftime('%H:%M')
     
@@ -403,7 +403,7 @@ def is_market_open():
     if now.weekday() >= 5: return False
     if is_nse_holiday(now): return False
     market_start = now.replace(hour=9, minute=15, second=0, microsecond=0)
-    market_end = now.replace(hour=15, minute=30, second=0, microsecond=0)
+    market_end = now.replace(hour=15, minute=35, second=0, microsecond=0)
     return market_start <= now <= market_end
 
 def is_within_notification_window():
