@@ -421,59 +421,71 @@ def is_within_notification_window():
 
 def fetch_indices():
     global latest_indices
-    url_nifty = "https://www.google.com/finance/quote/NIFTY_50:INDEXNSE"
-    url_vix = "https://www.google.com/finance/quote/INDIA_VIX:INDEXNSE"
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, deltas) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9'
     }
     
-    # 1. Fetch Nifty, Sensex, Bank Nifty
-    req_nifty = urllib.request.Request(url_nifty, headers=headers)
+    # 1. Fetch Nifty 50
     try:
-        with urllib.request.urlopen(req_nifty, timeout=5) as response:
+        req = urllib.request.Request("https://www.google.com/finance/quote/NIFTY_50:INDEXNSE", headers=headers)
+        with urllib.request.urlopen(req, timeout=5) as response:
             html = response.read().decode('utf-8')
             nifty_pat = r'\["NIFTY_50"\s*,\s*"INDEXNSE"\]\s*,\s*"NIFTY 50"\s*,\s*1\s*,\s*null\s*,\s*\[([\d.]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)'
-            sensex_pat = r'\["SENSEX"\s*,\s*"INDEXBOM"\]\s*,\s*"BSE SENSEX"\s*,\s*1\s*,\s*null\s*,\s*\[([\d.]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)'
-            bank_nifty_pat = r'\["NIFTY_BANK"\s*,\s*"INDEXNSE"\]\s*,\s*"Nifty Bank"\s*,\s*1\s*,\s*null\s*,\s*\[([\d.]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)'
-            
-            m_nifty = re.search(nifty_pat, html)
-            m_sensex = re.search(sensex_pat, html)
-            m_bank = re.search(bank_nifty_pat, html)
-            
-            if m_nifty:
+            m = re.search(nifty_pat, html)
+            if m:
                 latest_indices["NIFTY"] = {
-                    "price": float(m_nifty.group(1)),
-                    "change": float(m_nifty.group(2)),
-                    "pct": float(m_nifty.group(3))
-                }
-            if m_sensex:
-                latest_indices["SENSEX"] = {
-                    "price": float(m_sensex.group(1)),
-                    "change": float(m_sensex.group(2)),
-                    "pct": float(m_sensex.group(3))
-                }
-            if m_bank:
-                latest_indices["BANK_NIFTY"] = {
-                    "price": float(m_bank.group(1)),
-                    "change": float(m_bank.group(2)),
-                    "pct": float(m_bank.group(3))
+                    "price": float(m.group(1)),
+                    "change": float(m.group(2)),
+                    "pct": float(m.group(3))
                 }
     except Exception as e:
-        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Error scraping main indices: {e}")
-
-    # 2. Fetch India VIX
-    req_vix = urllib.request.Request(url_vix, headers=headers)
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Error scraping Nifty: {e}")
+        
+    # 2. Fetch Sensex
     try:
-        with urllib.request.urlopen(req_vix, timeout=5) as response:
+        req = urllib.request.Request("https://www.google.com/finance/quote/SENSEX:INDEXBOM", headers=headers)
+        with urllib.request.urlopen(req, timeout=5) as response:
+            html = response.read().decode('utf-8')
+            sensex_pat = r'\["SENSEX"\s*,\s*"INDEXBOM"\]\s*,\s*"BSE SENSEX"\s*,\s*1\s*,\s*null\s*,\s*\[([\d.]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)'
+            m = re.search(sensex_pat, html)
+            if m:
+                latest_indices["SENSEX"] = {
+                    "price": float(m.group(1)),
+                    "change": float(m.group(2)),
+                    "pct": float(m.group(3))
+                }
+    except Exception as e:
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Error scraping Sensex: {e}")
+        
+    # 3. Fetch Bank Nifty
+    try:
+        req = urllib.request.Request("https://www.google.com/finance/quote/NIFTY_BANK:INDEXNSE", headers=headers)
+        with urllib.request.urlopen(req, timeout=5) as response:
+            html = response.read().decode('utf-8')
+            bank_nifty_pat = r'\["NIFTY_BANK"\s*,\s*"INDEXNSE"\]\s*,\s*"Nifty Bank"\s*,\s*1\s*,\s*null\s*,\s*\[([\d.]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)'
+            m = re.search(bank_nifty_pat, html)
+            if m:
+                latest_indices["BANK_NIFTY"] = {
+                    "price": float(m.group(1)),
+                    "change": float(m.group(2)),
+                    "pct": float(m.group(3))
+                }
+    except Exception as e:
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Error scraping Bank Nifty: {e}")
+        
+    # 4. Fetch India VIX
+    try:
+        req = urllib.request.Request("https://www.google.com/finance/quote/INDIA_VIX:INDEXNSE", headers=headers)
+        with urllib.request.urlopen(req, timeout=5) as response:
             html = response.read().decode('utf-8')
             vix_pat = r'\["INDIA_VIX"\s*,\s*"INDEXNSE"\]\s*,\s*"Nifty VIX"\s*,\s*1\s*,\s*null\s*,\s*\[([\d.]+)\s*,\s*([\d.-]+)\s*,\s*([\d.-]+)'
-            m_vix = re.search(vix_pat, html)
-            if m_vix:
+            m = re.search(vix_pat, html)
+            if m:
                 latest_indices["INDIA_VIX"] = {
-                    "price": float(m_vix.group(1)),
-                    "change": float(m_vix.group(2)),
-                    "pct": float(m_vix.group(3))
+                    "price": float(m.group(1)),
+                    "change": float(m.group(2)),
+                    "pct": float(m.group(3))
                 }
     except Exception as e:
         print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] Error scraping VIX: {e}")
